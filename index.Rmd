@@ -1,0 +1,270 @@
+---
+title: "HR Retire Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+---
+
+<style>
+
+.navbar {
+  display: none;
+}
+
+/* 가운데 정렬 */
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30px; /* Adjust the font size as needed */
+  margin-top: -20px;
+}
+
+.centered_2 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px; /* Adjust the font size as needed */
+  margin-top: -50px;
+}
+
+/* Change the background color */
+body {
+  background-color: #ffffff; /* Replace with your desired color */
+}
+
+.chart-title {
+  text-align: center;
+  font-size: 15px;
+  border-bottom: 1px solid #ffffff;
+}
+
+.text{
+  color:#6b6b6b;
+}
+
+</style>
+
+
+<div class="centered_2">
+  <img src="lge_logo.png" alt="My Image "width="100" height="27">
+</div>
+
+<div class="centered">
+  <b class="text">HR DASHBOARD</b>
+</div>
+
+
+
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(highcharter)
+library(tidyverse)
+hr_info <- read.csv("data_store/hr-info.csv", fileEncoding = "cp949")
+```
+
+Row {}
+-----------------------------------------------------------------------
+
+### 관리자급 업무비중
+
+```{r}
+manager_pos <- data.frame(
+  category = c("과장", "차장", "부장"),
+  업무시간 = c(50, 51, 49),
+  휴식시간 = c(20, 22, 23),
+  잡무시간 = c(7,6,7)
+)
+
+highchart() %>%
+  hc_chart(type = "column") %>%
+#  hc_title(text = "관리자급 업무비중") %>%
+  hc_xAxis(categories = manager_pos$category,
+           labels = list(style = list(fontSize = '20px'))) %>%
+  hc_yAxis(min = 0,max = 100) %>% 
+  hc_plotOptions(
+    series = list(
+      stacking = "normal",
+      dataLabels = list(enabled = TRUE)  # Show data labels
+    )
+  ) %>%
+  hc_tooltip(
+    pointFormat = "<b>{series.name}</b>: {point.y}"
+  ) %>%
+  hc_legend(enabled = FALSE) %>%
+  hc_series(list(
+    name = "잡무시간",
+    data = manager_pos$잡무시간
+  ),list(
+    name = "휴식시간",
+    data = manager_pos$휴식시간
+  ), list(
+    name = "업무시간",
+    data = manager_pos$업무시간
+  )) %>% 
+  hc_colors(c("skyblue", "#6b6b6b","#A50034"))
+```
+
+### 사원급 업무비중
+
+```{r}
+employee_pos <- data.frame(
+  category = c("인턴", "사원", "대리"),
+  업무시간 = c(60, 59, 59),
+  휴식시간 = c(15, 16, 16),
+  잡무시간 = c(10,11,10)
+)
+
+highchart() %>%
+  hc_chart(type = "column") %>%
+#  hc_title(text = "관리자급 업무비중") %>%
+  hc_xAxis(categories = employee_pos$category,
+           labels = list(style = list(fontSize = '20px'))) %>%
+  hc_yAxis(min = 0,max = 100) %>% 
+  hc_plotOptions(
+    series = list(
+      stacking = "normal",
+      dataLabels = list(enabled = TRUE)  # Show data labels
+    )
+  ) %>%
+  hc_tooltip(
+    pointFormat = "<b>{series.name}</b>: {point.y}"
+  ) %>%
+  hc_legend(enabled = FALSE) %>%
+  hc_series(list(
+    name = "잡무시간",
+    data = employee_pos$잡무시간
+  ),list(
+    name = "휴식시간",
+    data = employee_pos$휴식시간
+  ), list(
+    name = "업무시간",
+    data = employee_pos$업무시간
+  )) %>% 
+  hc_colors(c("skyblue", "#6b6b6b","#A50034"))
+```
+
+Row {}
+-----------------------------------------------------------------------
+
+### 근속기간별 퇴사율/평균연봉
+
+```{r}
+# mean_sal_per_year <- hr_info %>%
+#   group_by(SERVICE_YEAR) %>% 
+#   summarize(mean_sal = round(mean(SALARY)))
+# 
+# mean_sal_per_year %>% 
+#   hchart(hcaes(x=SERVICE_YEAR,y=mean_sal),type = "line", color = '#A50034')%>%
+#   hc_tooltip(useHTML = TRUE,
+#              pointFormat = "<b>근속년수</b>: {point.x}<br><b>평균 연봉</b>: {point.y}") %>% 
+#   hc_xAxis(title=list(text = "근속년수")) %>% 
+#   hc_yAxis(title=list(text = "평균 연봉"),
+#            min = 4900,
+#            max = 10200)
+
+workstatus_T <- hr_info[hr_info$RETIRE_DATE == "",] %>% group_by(SERVICE_YEAR) %>% summarize(work_T = n())
+workstatus_F <- hr_info[hr_info$RETIRE_DATE != "",] %>% group_by(SERVICE_YEAR) %>% summarize(work_F = n())
+
+workstatus <- hr_info %>% group_by(SERVICE_YEAR) %>% summarize(cnt = n())
+workstatus <- workstatus %>% left_join(workstatus_T,by = 'SERVICE_YEAR') %>% left_join(workstatus_F,by = 'SERVICE_YEAR')
+workstatus[is.na(workstatus)] <- 0
+workstatus <- workstatus %>% mutate(ratio = round(work_F/cnt*100))
+
+mean_sal_per_year <- hr_info %>%
+  group_by(SERVICE_YEAR) %>% 
+  summarize(mean_sal = round(mean(SALARY)))
+
+df_for_plot_3 <- mean_sal_per_year %>% left_join(workstatus,by = 'SERVICE_YEAR')
+
+
+highchart() %>%
+  hc_xAxis(categories = df_for_plot_3$SERVICE_YEAR) %>% 
+  hc_add_series(data = df_for_plot_3$mean_sal, name = "평균 연봉", type = "line", yAxis = 0, color = "#A50034",
+                tooltip = list(
+                  valueDecimals = 2,
+                  pointFormat = "<b>평균연봉: {point.y:.0f}만원 </b><br/>"
+                )) %>% 
+  hc_add_series(data = df_for_plot_3$ratio, name = "퇴사자 비율", type = "line", yAxis = 1, color = "#6b6b6b",
+                tooltip = list(
+                  valueDecimals = 2,
+                  pointFormat = "<b>퇴사율: {point.y}%</b><br/>"
+                )) %>% 
+  hc_yAxis_multiples(
+    list(title = list(text = "평균 연봉"),min = 4900, max = 10200),
+    list(title = list(text = "퇴사율"),min = 0, max = 100, opposite = TRUE)
+  )
+
+
+```
+
+Row {}
+-----------------------------------------------------------------------
+
+### 연령대별 퇴사자 추이
+
+```{r}
+retire_per_age <- hr_info[hr_info$RETIRE_DATE != "",] %>% mutate(나이대 = paste0(AGE%/%10, "0대")) %>% group_by()
+df_2 <- retire_per_age %>% group_by(나이대,RETIRE_REASON) %>% summarize(cnt = n())
+df_3 <- df_2 %>% group_by(나이대) %>% summarize(cnt_2 = sum(cnt)) %>% mutate(collabel = paste0(나이대," : ",cnt_2,"명")) %>% right_join(df_2,by = '나이대')
+
+df_3 %>% 
+  hchart("packedbubble", hcaes(name = RETIRE_REASON, value = cnt, group = collabel)) %>% 
+  hc_tooltip(useHTML = TRUE, 
+             pointFormat = "<b>{point.name}: {point.value}명</b>") %>% 
+  hc_plotOptions(packedbubble = list(maxSize = "90%",
+                                     zMin = 0,
+                                     layoutAlgorithm = list(gravitationalConstant =  0.05,
+                                                            splitSeries =  TRUE, 
+                                                            seriesInteraction = TRUE,
+                                                            dragBetweenSeries = TRUE,
+                                                            parentNodeLimit = TRUE),
+                                     dataLabels = list(enabled = TRUE,
+                                                       format = "{point.name}",
+                                                       filter = list(property = "y",
+                                                                     operator = ">",
+                                                                     value = 0),
+                                                       style = list(color = "black",
+                                                                    textOutline = "none",
+                                                                    fontWeight = "normal")))) %>% 
+  hc_colors(c("#A50034", "#6b6b6b", "skyblue"))
+
+```
+
+### 연령대별 직업선택 기준
+
+```{r}
+polar_df <- data.frame(
+  name = as.factor(c("급여", "적성/흥미", "안정성", "명예/명성", "발전/장래", "자아실현")),
+  value20 = c(25, 19.4, 21.1, 11, 14.4, 12),
+  value30 = sample(c(3:28), 6),
+  value40 = sample(c(3:28), 6)
+)
+
+highchart() %>%
+  hc_chart(type = "line", polar = TRUE) %>% 
+  hc_xAxis(categories = polar_df$name)%>%
+  hc_yAxis(min = 0,max = 30)  %>% 
+  hc_add_series(name = "20대",
+                data = polar_df$value20,
+                pointPlacement = "on",
+                type = "line",
+                color = "#A50034",
+                tooltip = list(pointFormat = "<b>20대 - {point.category}:</b> {point.y}")) %>%
+  hc_add_series(name = "30대",
+                data = polar_df$value30,
+                pointPlacement = "on",
+                type = "line",
+                color = "#6b6b6b",
+                tooltip = list(pointFormat = "<b>30대 - {point.category}:</b> {point.y}")) %>%
+  hc_add_series(name = "40대",
+                data = polar_df$value40,
+                pointPlacement = "on",
+                type = "line",
+                color = "skyblue",
+                tooltip = list(pointFormat = "<b>40대 - {point.category}:</b> {point.y}")) %>% 
+  hc_size(width = 1000, height = 1000)
+```
+
