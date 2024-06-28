@@ -193,8 +193,8 @@ highchart() %>%
                   pointFormat = "<b>퇴사율: {point.y}%</b><br/>"
                 )) %>% 
   hc_yAxis_multiples(
-    list(title = list(text = "평균 연봉")),
-    list(title = list(text = "퇴사율"), opposite = TRUE)
+    list(title = list(text = "평균 연봉"),min = 4900, max = 10200),
+    list(title = list(text = "퇴사율"),min = 0, max = 100, opposite = TRUE)
   )
 
 
@@ -238,15 +238,15 @@ df_3 %>%
 ```{r}
 polar_df <- data.frame(
   name = as.factor(c("급여", "적성/흥미", "안정성", "명예/명성", "발전/장래", "자아실현")),
-  value20 = c(25, 19.4, 21.1, 11, 14.4, 12),
-  value30 = sample(c(3:28), 6),
-  value40 = sample(c(3:28), 6)
+  value20 = sample(c(1:5), 6, replace = TRUE),
+  value30 = sample(c(1:5), 6, replace = TRUE),
+  value40 = sample(c(1:5), 6, replace = TRUE)
 )
 
 highchart() %>%
   hc_chart(type = "line", polar = TRUE) %>% 
   hc_xAxis(categories = polar_df$name)%>%
-  hc_yAxis(min = 0,max = 30)  %>% 
+  hc_yAxis(min = 0,max = 5)  %>% 
   hc_add_series(name = "20대",
                 data = polar_df$value20,
                 pointPlacement = "on",
@@ -264,7 +264,6 @@ highchart() %>%
                 pointPlacement = "on",
                 type = "line",
                 color = "skyblue",
-                tooltip = list(pointFormat = "<b>40대 - {point.category}:</b> {point.y}")) %>% 
-  hc_size(width = 1000, height = 1000)
+                tooltip = list(pointFormat = "<b>40대 - {point.category}:</b> {point.y}"))
 ```
 
