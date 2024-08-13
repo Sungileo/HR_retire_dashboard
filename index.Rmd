@@ -32,6 +32,9 @@ output:
 /* Change the background color */
 body {
   background-color: #ffffff; /* Replace with your desired color */
+  margin-right: 30vw;
+  margin-left: 30vw;
+  transition: margin 0.3s ease;
 }
 
 .chart-title {
@@ -43,6 +46,29 @@ body {
 .text{
   color:#6b6b6b;
 }
+
+@media (max-width: 1900px) {
+  body {
+    margin-right: 25vw;
+    margin-left: 25vw;
+  }
+}
+
+@media (max-width: 1600px) {
+  body {
+    margin-right: 15vw;
+    margin-left: 15vw;
+  }
+}
+
+@media (max-width: 900px) {
+  body {
+    margin-right: 1vw;
+    margin-left: 1vw;
+  }
+}
+
+
 
 </style>
 
@@ -193,8 +219,8 @@ highchart() %>%
                   pointFormat = "<b>퇴사율: {point.y}%</b><br/>"
                 )) %>% 
   hc_yAxis_multiples(
-    list(title = list(text = "평균 연봉")),
-    list(title = list(text = "퇴사율"), opposite = TRUE)
+    list(title = list(text = "평균 연봉"),min = 4900, max = 10200),
+    list(title = list(text = "퇴사율"),min = 0, max = 100, opposite = TRUE)
   )
 
 
@@ -268,3 +294,6 @@ highchart() %>%
   hc_size(width = 1000, height = 1000)
 ```
 
+Row{data-height=20}
+------------------------------------------
+LG전자 DXSchool 1기 **데일리 FC** 제작
